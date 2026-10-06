@@ -1,0 +1,31 @@
+{
+  "SPAWN_MIN_X": 0,
+  "SPAWN_MAX_X": 0,
+  "SPAWN_MIN_Y": 0,
+  "SPAWN_MAX_Y": 0,
+  "FREQ_SEND_STATUS_TO_FMS_SEC": 0.2,
+  "FREQ_MOVE_TO_WAYPOINTS_SEC": 0.1,
+  "SPEED_MS": 1.5,
+  "ELEVATOR_TRANSIT_TIME_SEC": 3,
+  "MOVEMENT_MODEL": "simple",
+  "PID_CONFIG": {
+    "Kp_v": 0.5,
+    "Ki_v": 0.0,
+    "Kd_v": 0.1,
+    "Kp_w": 1.5,
+    "Ki_w": 0.0,
+    "Kd_w": 0.1,
+    "waypoint_threshold": 20.0
+  },
+  "ROBOT_CONFIG": {
+    "b": 0.217,
+    "wheel_radius": 0.1,
+    "coordinate_scale": 50,
+    "max_wheel_speed": 150.0,
+    "max_acceleration": 0.4,
+    "heading_throttle_gain": 1.0,
+    "final_rotation_kp": 1.5,
+    "final_rotation_threshold_deg": 2.0,
+    "max_angular_acceleration": 1.0
+  }
+}

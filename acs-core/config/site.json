@@ -1,0 +1,35 @@
+{
+  "name": "Joseph Demo Floor",
+  "mapId": "floor-1",
+  "bounds": { "minX": 0, "minY": -1, "maxX": 20, "maxY": 13 },
+  "stations": [
+    { "id": "P1", "title": "Pickup 1", "type": "pickup", "x": 2, "y": 11 },
+    { "id": "P2", "title": "Pickup 2", "type": "pickup", "x": 2, "y": 7 },
+    { "id": "P3", "title": "Pickup 3", "type": "pickup", "x": 2, "y": 3 },
+    { "id": "D1", "title": "Drop 1", "type": "drop", "x": 18, "y": 11 },
+    { "id": "D2", "title": "Drop 2", "type": "drop", "x": 18, "y": 7 },
+    { "id": "D3", "title": "Drop 3", "type": "drop", "x": 18, "y": 3 },
+    { "id": "K1", "title": "Park 1", "type": "park", "x": 6, "y": 0.5 },
+    { "id": "K2", "title": "Park 2", "type": "park", "x": 10, "y": 0.5 },
+    { "id": "K3", "title": "Park 3", "type": "park", "x": 14, "y": 0.5 },
+    { "id": "A1", "type": "junction", "x": 6, "y": 11 },
+    { "id": "A2", "type": "junction", "x": 6, "y": 7 },
+    { "id": "A3", "type": "junction", "x": 6, "y": 3 },
+    { "id": "B1", "type": "junction", "x": 10, "y": 11 },
+    { "id": "B2", "type": "junction", "x": 10, "y": 7 },
+    { "id": "B3", "type": "junction", "x": 10, "y": 3 },
+    { "id": "C1", "type": "junction", "x": 14, "y": 11 },
+    { "id": "C2", "type": "junction", "x": 14, "y": 7 },
+    { "id": "C3", "type": "junction", "x": 14, "y": 3 }
+  ],
+  "paths": [
+    ["P1", "A1"], ["P2", "A2"], ["P3", "A3"],
+    ["A1", "B1"], ["B1", "C1"], ["C1", "D1"],
+    ["A2", "B2"], ["B2", "C2"], ["C2", "D2"],
+    ["A3", "B3"], ["B3", "C3"], ["C3", "D3"],
+    ["A1", "A2"], ["A2", "A3"],
+    ["B1", "B2"], ["B2", "B3"],
+    ["C1", "C2"], ["C2", "C3"],
+    ["K1", "A3"], ["K2", "B3"], ["K3", "C3"]
+  ]
+}

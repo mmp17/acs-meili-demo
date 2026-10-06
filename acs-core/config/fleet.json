@@ -1,0 +1,8 @@
+{
+  "fleetToken": "joseph-demo-fleet-token",
+  "vehicles": [
+    { "uuid": "a0000000000000000000000000000001", "name": "AMR-01", "home": "K1" },
+    { "uuid": "a0000000000000000000000000000002", "name": "AMR-02", "home": "K2" },
+    { "uuid": "a0000000000000000000000000000003", "name": "AMR-03", "home": "K3" }
+  ]
+}

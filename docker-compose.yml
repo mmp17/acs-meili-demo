@@ -1,0 +1,24 @@
+services:
+  acs-core:
+    build:
+      context: ./acs-core
+      additional_contexts:
+        extra-ca: ./extra-ca
+    ports:
+      - "8900:8900"
+    volumes:
+      - ./acs-core/data:/app/data
+
+  # Meili Robots' open-source python-simulator, connecting to the ACS as if it were Meili FMS.
+  meili-sim:
+    build:
+      context: ./fleet-sim
+      additional_contexts:
+        extra-ca: ./extra-ca
+    environment:
+      ACS_URL: http://acs-core:8900
+    volumes:
+      - ./acs-core/config/fleet.json:/config/fleet.json:ro
+    depends_on:
+      - acs-core
+    restart: unless-stopped

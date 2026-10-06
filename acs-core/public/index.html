@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Joseph Robot Control System · Meili agent demo</title>
+<style>
+  :root {
+    --bg: #f4f6fa; --panel: #ffffff; --line: #dfe4ec; --text: #14213a; --muted: #63708a;
+    --accent: #1f5fbf; --accent-soft: #e3edfb; --ok: #1a8a55; --warn: #b7791f; --err: #c53030;
+    --floor: #fbfcfe; --path: #c3ccda; --station: #1f5fbf; --drop: #1a8a55; --park: #7a869a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1420; --panel: #161e2d; --line: #283347; --text: #e6ebf5; --muted: #8e9bb3;
+      --accent: #6aa5ff; --accent-soft: #1c2c47; --ok: #4fd08f; --warn: #f0b85a; --err: #ff7b7b;
+      --floor: #121a28; --path: #33405a; --station: #6aa5ff; --drop: #4fd08f; --park: #7f8ca6;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, "Segoe UI", sans-serif; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; padding: 14px 20px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  h1 { margin: 0; font-size: 17px; font-weight: 650; }
+  h1 small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
+  .kpis { display: flex; flex-wrap: wrap; gap: 22px; margin-left: auto; }
+  .kpi b { display: block; font-size: 19px; font-variant-numeric: tabular-nums; }
+  .kpi span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .link { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--err); }
+  .dot.live { background: var(--ok); }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; padding: 16px 20px; }
+  @media (max-width: 1050px) { main { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  .panel h2 { margin: 0; padding: 11px 14px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border-bottom: 1px solid var(--line); }
+  .panel .body { padding: 12px 14px; }
+  .col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  canvas { display: block; width: 100%; border-radius: 0 0 10px 10px; background: var(--floor); }
+  form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+  select, input, button { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px; }
+  button { cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.small { padding: 2px 8px; font-size: 12px; }
+  .actions { grid-column: 1 / -1; display: flex; gap: 8px; }
+  .actions button { flex: 1; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-size: 11px; font-weight: 500; color: var(--muted); padding: 0 6px 6px 0; }
+  td { padding: 5px 6px 5px 0; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tag { display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--accent-soft); color: var(--accent); }
+  .tag.ok { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+  .tag.warn { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+  .tag.err { background: color-mix(in srgb, var(--err) 16%, transparent); color: var(--err); }
+  .tag.mute { background: color-mix(in srgb, var(--muted) 16%, transparent); color: var(--muted); }
+  .scroll { max-height: 260px; overflow: auto; }
+  .tabs { display: flex; gap: 4px; padding: 8px 10px 0; border-bottom: 1px solid var(--line); }
+  .tabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--muted); padding: 6px 10px; }
+  .tabs button.on { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+  .feed { height: 230px; overflow: auto; padding: 8px 14px; font: 12px/1.6 ui-monospace, Consolas, monospace; }
+  .feed div { white-space: pre-wrap; word-break: break-word; }
+  .feed .warn { color: var(--warn); } .feed .error { color: var(--err); } .feed .t { color: var(--muted); }
+  .feed .tx { color: var(--accent); } .feed .rx { color: var(--ok); }
+  .empty { color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Joseph Robot Control System <small>Meili agent protocol demo</small></h1>
+  <span class="link"><span class="dot" id="live"></span><span id="liveText">connecting…</span></span>
+  <div class="kpis" id="kpis"></div>
+</header>
+<main>
+  <div class="col">
+    <section class="panel">
+      <h2 id="mapTitle">Floor</h2>
+      <canvas id="map" width="1200" height="840"></canvas>
+    </section>
+    <section class="panel">
+      <div class="tabs">
+        <button class="on" data-tab="log">ACS events</button>
+        <button data-tab="trace">Meili protocol trace</button>
+      </div>
+      <div class="feed" id="feed"></div>
+    </section>
+  </div>
+  <div class="col">
+    <section class="panel">
+      <h2>New transport order</h2>
+      <div class="body">
+        <form id="orderForm">
+          <label>Pickup <select name="from"></select></label>
+          <label>Drop <select name="to"></select></label>
+          <label>Priority <input name="priority" type="number" value="0" min="0" max="9"></label>
+          <label>&nbsp;<button class="primary" type="submit">Create order</button></label>
+          <div class="actions"><button type="button" id="random">Add 5 random orders</button></div>
+        </form>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>Robots</h2>
+      <div class="body"><table id="robots"></table></div>
+    </section>
+    <section class="panel">
+      <h2>Orders</h2>
+      <div class="body scroll"><table id="orders"></table></div>
+    </section>
+  </div>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const el = (tag, props = {}, ...children) => {
+  const node = Object.assign(document.createElement(tag), props);
+  node.append(...children);
+  return node;
+};
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const post = (url, body) => fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body ?? {}) });
+const time = (ts) => new Date(ts).toLocaleTimeString([], { hour12: false });
+const ROBOT_COLORS = ['#e8590c', '#7048e8', '#0c8599', '#c2255c', '#5c940d', '#1864ab'];
+const STATE_TAG = { IDLE: 'mute', EXECUTING: '', HELD: 'warn', PAUSED: 'warn', OFFLINE: 'err', QUEUED: 'mute', IN_PROGRESS: '', COMPLETED: 'ok', FAILED: 'err', CANCELLED: 'warn' };
+
+let site = null;
+let state = null;
+let tab = 'log';
+const drawn = new Map(); // robot id -> smoothed { x, y, heading }
+
+// ---- map ------------------------------------------------------------------
+const canvas = $('map');
+const ctx = canvas.getContext('2d');
+
+function project(p) {
+  const b = site.bounds;
+  const scale = Math.min(canvas.width / (b.maxX - b.minX), canvas.height / (b.maxY - b.minY));
+  const ox = (canvas.width - scale * (b.maxX - b.minX)) / 2;
+  const oy = (canvas.height - scale * (b.maxY - b.minY)) / 2;
+  return { x: ox + (p.x - b.minX) * scale, y: canvas.height - oy - (p.y - b.minY) * scale, scale };
+}
+
+function draw() {
+  requestAnimationFrame(draw);
+  if (!site) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const stations = new Map(site.stations.map((s) => [s.id, s]));
+  const { scale } = project({ x: 0, y: 0 });
+
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = css('--path');
+  ctx.lineWidth = scale * 0.5;
+  for (const [a, b] of site.paths) {
+    const p = project(stations.get(a)), q = project(stations.get(b));
+    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+  }
+
+  ctx.font = `600 ${Math.round(scale * 0.42)}px system-ui, sans-serif`;
+  ctx.textAlign = 'center';
+  for (const s of site.stations) {
+    if (s.type === 'junction') continue;
+    const p = project(s);
+    const size = scale * 0.95;
+    ctx.fillStyle = css(s.type === 'drop' ? '--drop' : s.type === 'park' ? '--park' : '--station');
+    ctx.beginPath(); ctx.roundRect(p.x - size / 2, p.y - size / 2, size, size, size * 0.22); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.fillText(s.id, p.x, p.y + scale * 0.15);
+  }
+  if (!state) return;
+
+  state.robots.forEach((robot, i) => {
+    if (!robot.pose) return;
+    const color = ROBOT_COLORS[i % ROBOT_COLORS.length];
+    const prev = drawn.get(robot.id) ?? { x: robot.pose.x, y: robot.pose.y, heading: robot.pose.theta };
+    const dx = robot.pose.x - prev.x, dy = robot.pose.y - prev.y;
+    const jump = Math.hypot(dx, dy) > 3; // teleport (re-localisation): do not animate
+    const next = {
+      x: jump ? robot.pose.x : prev.x + dx * 0.12,
+      y: jump ? robot.pose.y : prev.y + dy * 0.12,
+      heading: Math.hypot(dx, dy) > 0.05 ? (Math.atan2(dy, dx) * 180) / Math.PI : prev.heading,
+    };
+    drawn.set(robot.id, next);
+
+    if (robot.route) {
+      ctx.strokeStyle = color; ctx.lineWidth = scale * 0.1; ctx.setLineDash([scale * 0.25, scale * 0.25]);
+      ctx.beginPath();
+      let p = project(next); ctx.moveTo(p.x, p.y);
+      // skip waypoints the robot has already passed: start from the one closest to it
+      let from = 0, best = Infinity;
+      robot.route.forEach((w, k) => { const d = Math.hypot(w.x - next.x, w.y - next.y); if (d <= best) { best = d; from = k; } });
+      for (const w of robot.route.slice(from)) { p = project(w); ctx.lineTo(p.x, p.y); }
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+
+    const p = project(next);
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.globalAlpha = robot.state === 'OFFLINE' ? 0.35 : 1;
+    ctx.rotate((-next.heading * Math.PI) / 180);
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.roundRect(-scale * 0.42, -scale * 0.3, scale * 0.84, scale * 0.6, scale * 0.12); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.moveTo(scale * 0.3, 0); ctx.lineTo(scale * 0.08, -scale * 0.16); ctx.lineTo(scale * 0.08, scale * 0.16); ctx.fill();
+    ctx.restore();
+    if (robot.state === 'HELD' || robot.state === 'PAUSED') {
+      ctx.strokeStyle = css('--warn'); ctx.lineWidth = scale * 0.08;
+      ctx.beginPath(); ctx.arc(p.x, p.y, scale * 0.62, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.fillStyle = css('--text');
+    ctx.font = `600 ${Math.round(scale * 0.36)}px system-ui, sans-serif`;
+    ctx.fillText(robot.name, p.x, p.y - scale * 0.6);
+  });
+}
+
+// ---- panels ---------------------------------------------------------------
+// Rebuild a panel only when its data changed, so buttons stay clickable between updates.
+const seen = {};
+const changed = (key, data) => {
+  const signature = JSON.stringify(data);
+  if (seen[key] === signature) return false;
+  seen[key] = signature;
+  return true;
+};
+
+const tag = (text) => el('span', { className: `tag ${STATE_TAG[text] ?? ''}`, textContent: text });
+
+function render() {
+  const k = state.kpi;
+  $('kpis').replaceChildren(
+    ...[[`${k.online}/${k.robots}`, 'Robots online'], [k.queued, 'Queued'], [k.inProgress, 'In progress'], [k.completed, 'Completed'], [k.failed, 'Failed'], [`${k.avgMissionSec}s`, 'Avg mission']]
+      .map(([value, label]) => el('div', { className: 'kpi' }, el('b', { textContent: value }), el('span', { textContent: label }))),
+  );
+
+  const missions = new Map(state.missions.map((m) => [m.id, m]));
+  const robotRows = state.robots.map((r) => [r.state, r.missionId, missions.get(r.missionId)?.stepIndex, r.battery?.toFixed(1)]);
+  if (changed('robots', robotRows)) $('robots').replaceChildren(
+    el('tr', {}, ...['Robot', 'State', 'Mission', 'Battery', ''].map((h) => el('th', { textContent: h }))),
+    ...state.robots.map((r, i) => {
+      const mission = missions.get(r.missionId);
+      const step = mission && mission.steps[mission.stepIndex];
+      const name = el('td', {}, el('span', { textContent: '● ', style: `color:${ROBOT_COLORS[i % ROBOT_COLORS.length]}` }), r.name);
+      const toggle = el('button', { className: 'small', textContent: r.state === 'PAUSED' ? 'Resume' : 'Pause', disabled: r.state === 'OFFLINE' });
+      toggle.onclick = () => post(`/api/robots/${r.id}/${r.state === 'PAUSED' ? 'resume' : 'pause'}`);
+      return el('tr', {}, name, el('td', {}, tag(r.state)),
+        el('td', { textContent: mission ? `${mission.number} · ${step.type} ${step.station}` : '—' }),
+        el('td', { textContent: r.battery == null ? '—' : `${r.battery.toFixed(1)}%` }), el('td', {}, toggle));
+    }),
+  );
+
+  const orders = [...state.orders].reverse();
+  if (changed('orders', orders.map((o) => [o.id, o.state]))) $('orders').replaceChildren(
+    ...(orders.length
+      ? [el('tr', {}, ...['Order', 'Route', 'Prio', 'State', ''].map((h) => el('th', { textContent: h }))),
+        ...orders.map((o) => {
+          const cancel = el('button', { className: 'small', textContent: 'Cancel' });
+          cancel.onclick = () => post(`/api/orders/${o.id}/cancel`);
+          const open = o.state === 'QUEUED' || o.state === 'IN_PROGRESS';
+          return el('tr', {}, el('td', { textContent: o.number }), el('td', { textContent: `${o.from} → ${o.to}` }),
+            el('td', { textContent: o.priority }), el('td', {}, tag(o.state)), el('td', {}, open ? cancel : ''));
+        })]
+      : [el('tr', {}, el('td', { className: 'empty', textContent: 'No orders yet — create one above.' }))]),
+  );
+  if (changed('feed', [state.log.at(-1)?.ts, state.log.length, state.trace.at(-1)?.ts, state.trace.length])) renderFeed();
+}
+
+function renderFeed() {
+  const feed = $('feed');
+  const stick = feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 30;
+  const names = new Map(state.robots.map((r) => [r.id, r.name]));
+  const rows = tab === 'log'
+    ? state.log.map((e) => el('div', { className: e.level }, el('span', { className: 't', textContent: `${time(e.ts)}  ` }), `${e.type.padEnd(20)} ${e.message}`))
+    : state.trace.map((f) => {
+        const { vehicle, ...rest } = f.payload;
+        return el('div', {}, el('span', { className: 't', textContent: `${time(f.ts)}  ` }),
+          el('span', { className: f.dir, textContent: f.dir === 'tx' ? 'ACS → ' : 'ACS ← ' }), `${names.get(f.robotId) ?? 'agent'}  ${JSON.stringify(rest)}`);
+      });
+  feed.replaceChildren(...(rows.length ? rows : [el('div', { className: 'empty', textContent: 'Nothing yet.' })]));
+  if (stick) feed.scrollTop = feed.scrollHeight;
+}
+
+document.querySelectorAll('.tabs button').forEach((button) => {
+  button.onclick = () => {
+    tab = button.dataset.tab;
+    document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', b === button));
+    if (state) renderFeed();
+  };
+});
+
+// ---- orders ---------------------------------------------------------------
+const form = $('orderForm');
+form.onsubmit = async (event) => {
+  event.preventDefault();
+  const data = Object.fromEntries(new FormData(form));
+  const res = await post('/api/orders', { ...data, priority: Number(data.priority) });
+  if (!res.ok) alert((await res.json()).error);
+};
+$('random').onclick = () => {
+  const pick = (type) => { const list = site.stations.filter((s) => s.type === type); return list[Math.floor(Math.random() * list.length)].id; };
+  for (let i = 0; i < 5; i++) post('/api/orders', { from: pick('pickup'), to: pick('drop'), priority: 0 });
+};
+
+// ---- boot -----------------------------------------------------------------
+fetch('/api/site').then((r) => r.json()).then((s) => {
+  site = s;
+  $('mapTitle').textContent = `${s.name} · map ${s.mapId}`;
+  const options = (type) => s.stations.filter((x) => x.type === type).map((x) => el('option', { value: x.id, textContent: `${x.id} — ${x.title}` }));
+  form.elements.from.replaceChildren(...options('pickup'));
+  form.elements.to.replaceChildren(...options('drop'));
+  requestAnimationFrame(draw);
+});
+
+const events = new EventSource('/api/events');
+events.onopen = () => { $('live').classList.add('live'); $('liveText').textContent = 'live'; };
+events.onerror = () => { $('live').classList.remove('live'); $('liveText').textContent = 'ACS unreachable — retrying'; };
+events.onmessage = (message) => { state = JSON.parse(message.data); render(); };
+</script>
+</body>
+</html>

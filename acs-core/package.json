@@ -1,0 +1,16 @@
+{
+  "name": "acs-meili-demo-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Joseph Robot Control System: mini ACS control plane that speaks the Meili agent WebSocket protocol",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/server.js",
+    "fake-fleet": "node tools/fake-agent.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
